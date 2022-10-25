@@ -34,6 +34,11 @@ export interface CategoryProps {
     name: string
 }
 
+interface ProductProps {
+    id: string,
+    name: string,
+}
+
 
 export default function Order() {
 
@@ -47,6 +52,11 @@ export default function Order() {
     const [amount, setAmount] = useState('1')
     const [modalCategoryVisible, setModalCategoryVisible] = useState(false)
 
+    const [products, setProducts] = useState<ProductProps[] | []>([])
+    const [productSelected, setProductSelected] = useState<ProductProps>()
+    const [modalProdcutVisible, setModalProductVisible] = useState(false)
+
+
     useEffect(() => {
         async function loadInfo() {
             const response = await api.get('/category')
@@ -56,7 +66,20 @@ export default function Order() {
         loadInfo()
     }, [])
 
+    useEffect(() => {
+        async function loadProducts() {
+            const response = await api.get('/category/product', {
+                params: {
+                    category_id: categorySelected?.id
+                }
+            })
 
+            setProducts(response.data)
+            setProductSelected(response.data[0])
+        }
+        loadProducts()
+    }, [categorySelected])
+    
     async function handleCloseOrder() {
         try {
             await api.delete('/order', {
@@ -75,7 +98,11 @@ export default function Order() {
     function handleChangeCategory(item: CategoryProps) {
         setCategorySelected(item)
     }
-    
+
+    function handleChangeProduct(item: ProductProps){
+        setProductSelected(item)
+    }
+
 
 
     return (
@@ -88,10 +115,9 @@ export default function Order() {
             </View>
             {
                 category.length !== 0 && (
-                    <TouchableOpacity style={styles.input} 
-                        onPress={() =>{
-                            setModalCategoryVisible(true)
-                        }}
+                    <TouchableOpacity 
+                        style={styles.input}
+                        onPress={() => {setModalCategoryVisible(true)}}
                     >
                         <Text style={{ color: '#FFF' }}>
                             {
@@ -101,9 +127,18 @@ export default function Order() {
                     </TouchableOpacity>
                 )
             }
-            <TouchableOpacity style={styles.input}>
-                <Text style={{ color: '#FFF' }}>Pizza Calabresa</Text>
-            </TouchableOpacity>
+            {
+                products.length !== 0 && (
+                    <TouchableOpacity 
+                        style={styles.input}
+                        onPress={ () => setModalProductVisible(true)}
+                    >
+                        <Text style={{ color: '#FFF' }}>
+                            {productSelected?.name}
+                        </Text>
+                    </TouchableOpacity>
+                )
+            }
 
             <View style={styles.qtdContainer}>
                 <Text style={styles.qtdText}>Quantidade</Text>
@@ -128,15 +163,27 @@ export default function Order() {
                 </TouchableOpacity>
             </View>
 
-            <Modal 
+            <Modal
                 transparent={true}
                 visible={modalCategoryVisible}
                 animationType="fade"
             >
                 <ModalPicker
-                    hanldeCloseModal={ () => setModalCategoryVisible(false)}
+                    hanldeCloseModal={() => setModalCategoryVisible(false)}
                     options={category}
-                    selectedItem={ handleChangeCategory }
+                    selectedItem={handleChangeCategory}
+                />
+            </Modal>
+
+            <Modal
+                transparent={true}
+                visible={modalProdcutVisible}
+                animationType='fade'
+            >
+                <ModalPicker
+                    hanldeCloseModal={ () => setModalProductVisible(false)}
+                    options={products}
+                    selectedItem={handleChangeProduct}
                 />
             </Modal>
         </View>
