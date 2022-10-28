@@ -3,6 +3,9 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native"
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
+import { StackParamsList } from '../../routes/app.routes'
+
 import { api } from '../../services/api'
 
 type RouteDetailParams = {
@@ -14,19 +17,28 @@ type RouteDetailParams = {
 
 type FinishOrderRouteProp = RouteProp<RouteDetailParams, 'FinishOrder'>
 
-export function FinishOrder() {
+export default function FinishOrder() {
 
     const route = useRoute<FinishOrderRouteProp>()
-    const navigation = useNavigation()
+    const navigation = useNavigation<NativeStackNavigationProp<StackParamsList>>()
 
-    async function handleFinish(){
-        await api.put('/order/send', {
-            order_id: route.params?.order_id
-        })
 
-        navigation.navigate('Dashboard')
+    async function handleFinish() {
+        try {
+            await api.put('/order/send', {
+                order_id: route.params?.order_id
+            })
+    
+            //@ts-ignore
+            navigation.navigate('Dashboard')
 
+        } catch (err) {
+            console.log('Erro ao finalizar tente mais tarde');
+            
+        }
     }
+
+
 
     return(
         <View style={styles.container}>
